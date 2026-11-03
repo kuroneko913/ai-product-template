@@ -22,7 +22,7 @@ AIエージェントに、新しいプロダクトの開発を任せるための
 3. [`docs/SETUP.md`](docs/SETUP.md) の人間の作業を行う(GitHub の設定、ラベル、ブランチ保護)。スタック固有の作業は、展開された `docs/STACK.md` にある。
 4. issue を作り、内容を確認して `ready` を付ける。AI が実装して PR を出す。流れは [`docs/WORKFLOW.md`](docs/WORKFLOW.md)。
 
-スタックを選ばないままだと、CI は失敗する(意図した動き)。
+スタックを選ばないままだと、CI は失敗する(意図した動き)。テンプレート自身(Template repository に設定したリポジトリ)では、この検査は動かさず、代わりに `Template self-test` が、各スタックを展開して通しで検査する。
 
 ## 構成
 

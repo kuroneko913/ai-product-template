@@ -13,6 +13,8 @@ jobs:
   # コマンドの中身は factory.json にある。スタックが未選択なら、ここは失敗する。
   suite:
     name: ${{ matrix.name }}
+    # テンプレート自身には、スタックがない。製品のリポジトリ(is_template が false)でだけ動かす。
+    if: ${{ !github.event.repository.is_template }}
     strategy:
       # 独立した検査は、1つが落ちても他を止めない。
       fail-fast: false
@@ -57,7 +59,8 @@ jobs:
 
   protected-paths:
     name: Guard / protected paths
-    if: github.event_name == 'pull_request'
+    # テンプレート自身の保守では、保護パスを変更するのが仕事なので、動かさない。
+    if: ${{ github.event_name == 'pull_request' && !github.event.repository.is_template }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -88,8 +91,11 @@ jobs:
           CORE: ${{ needs.core.result }}
           GUARD: ${{ needs.protected-paths.result }}
           EVENT: ${{ github.event_name }}
+          IS_TEMPLATE: ${{ github.event.repository.is_template }}
         run: |
-          test "$SUITE" = success
           test "$CORE" = success
+          # テンプレート自身では、suite と guard は動かさない(スタックの検査は Template self-test)。
+          if [ "$IS_TEMPLATE" = "true" ]; then exit 0; fi
+          test "$SUITE" = success
           # push では protected-paths は実行されない(skipped)。PR では success が必要。
           if [ "$EVENT" = "pull_request" ]; then test "$GUARD" = success; fi
