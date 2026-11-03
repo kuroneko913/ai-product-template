@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
 # 認証情報のファイルを、直接読み書きしたり持ち出したりするのを防ぐ。
 # 例外のないルールなので、CLAUDE.md ではなく hook で強制する。
+# 注意: シェルの書き方は無数にあるため、Bash の検査は網羅できない。最終的な守りは、Secrets を AI の環境に置かないこと。
 set -euo pipefail
 
 INPUT="$(cat)"
 TOOL_NAME="$(jq -r '.tool_name' <<<"$INPUT")"
-# .env / .env.local / .dev.vars など。ただし *.example は読んでよい。
+
+# Read / Write / Edit に使う、ファイルパスの判定。
+# .env / .env.local / .dev.vars / secrets/ / *.pem / 秘密鍵。ただし *.example は読んでよい。
 FILE_PATTERN='(^|/)\.env(\.[^/]*)?$|(^|/)\.dev\.vars(\.[^/]*)?$|(^|/)secrets/|\.pem$|(^|/)id_(rsa|ed25519)$'
-CMD_PATTERN='(^|[[:space:]/])\.env([^a-zA-Z0-9_]|$)|(^|[[:space:]/])\.env\.[a-z]+|(^|[[:space:]/])\.dev\.vars([^a-zA-Z0-9_.]|$)|(^|[[:space:]/])\.dev\.vars\.[a-z]+'
-READERS='(cat|less|more|head|tail|jq|grep|sed|awk|cp|mv|scp|curl|base64|python|node|xxd|od|source)'
+
+# Bash のコマンド文字列の判定。パスの前に来うる文字(空白、/、引用符、=、:、括弧、リダイレクト)を境界にして、
+# 引用符つき(cat ".env")や、代入・リダイレクトの中でも見つける。
+BEFORE="(^|[[:space:]/\"'=:(<>@])"
+AFTER="([^A-Za-z0-9_.-]|\$)"
+# グロブ(.env.* や .env.?*)は、シェルが展開する前の文字列なので、* と ? も、ファイル名の一部として扱う。
+CMD_PATTERN="${BEFORE}(\.env|\.dev\.vars)(\.[A-Za-z0-9_.*?-]*)?${AFTER}|${BEFORE}secrets/|\.pem${AFTER}|${BEFORE}id_(rsa|ed25519)${AFTER}"
+# 読み取りコマンドの名前は、前後の境界を見ない(gawk、mawk、/bin/cat、sudo cat なども、名前に含まれていれば対象にする)。
+READERS='(cat|less|more|head|tail|tac|nl|strings|jq|grep|rg|sed|awk|cp|mv|scp|rsync|curl|wget|base64|openssl|gpg|python|node|xxd|od|source|tar|zip|vim|vi|nano|open|ssh|bat|view|diff|sort|cut|paste|tee|column|fold|rev)'
 
 deny() {
   jq -n --arg reason "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}'

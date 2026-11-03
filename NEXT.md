@@ -21,6 +21,15 @@
 - `Core / scripts`(自己検査15件)が成功
 - 保護パスのガード(`Guard / protected paths`)が、`.github/**` を変更する PR(Dependabot の #1)で、期待どおり失敗した
 
+### 製品側での確認と、見つかった不具合(2026-11-03、factory-console に組み込んで)
+
+- 製品のリポジトリ(`is_template` が false)の GitHub Actions で、`Check / fast`、`Check / acceptance`、`Security`、`E2E`、`Core / scripts` が成功。`Template self-test` は skipped(設計どおり)。ガードは、ラベルがないと失敗(設計どおり)
+- Codex のレビューで、次の2件(P1)が見つかり、直した(失敗するテストを先に書いた。共通の自己検査は15件から28件に)
+  - 保護ファイルを、保護されていない場所へ移動すると、ガードが見逃す(`git diff` の移動の検出で、移動先しか出なかった)。`--no-renames` で直した
+  - 日本語・タブ・引用符を含む保護ファイル名を、ガードが見逃す(`git diff --name-only` は、そうした名前を引用符つきで出力する)。`-z`(NUL 区切り)で直した。共通の自己検査は32件
+  - secrets hook の書き換えで、元の版では拒否できていた `cat .env.*`(グロブ)と `gawk '{print}' .env` を許可してしまう後退を入れていた。グロブの文字をファイル名の一部として扱い、読み取りコマンドの判定を「名前に含まれていれば」に戻して直した。共通の自己検査は34件
+  - `guard-secrets.sh` が、Bash での `cat ".env"`、`secrets/`、`*.pem`、秘密鍵の読み取りを見逃す。境界の文字に引用符などを加え、パスの範囲を Read / Edit と揃えた。シェルの書き方は無数にあるため、Bash の検査は網羅できない(最終的な守りは、Secrets を AI の環境に置かないこと)
+
 ### 確認できていないこと
 
 - 製品のリポジトリでの `ci.yml` の `suite`(スタックを展開した状態での実行)。`Template self-test` は、同じコマンドを順に実行するだけで、`ci.yml` 自体のマトリクスは通っていない
