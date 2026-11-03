@@ -11,13 +11,14 @@ if (!base) {
 if (!/^[0-9a-f]{40}$/.test(base)) throw new Error("BASE_SHA が不正です");
 
 // --no-renames: 移動は「移動元の削除」と「移動先の追加」の両方として出す(移動元だけ保護パスでも、見逃さない)。
-const diff = spawnSync("git", ["diff", "--name-only", "--no-renames", `${base}...HEAD`], {
+// -z: ファイル名をNUL区切りで、そのまま出す(日本語・タブ・引用符を含む名前が、引用符つきで出力されるのを避ける)。
+const diff = spawnSync("git", ["diff", "--name-only", "--no-renames", "-z", `${base}...HEAD`], {
   encoding: "utf8",
   maxBuffer: 20 * 1024 * 1024,
 });
 if (diff.status !== 0) throw new Error("git diff に失敗しました");
 
-const changed = diff.stdout.split("\n").filter(Boolean);
+const changed = diff.stdout.split("\0").filter(Boolean);
 const hits = findProtected(changed, loadPatterns());
 if (hits.length === 0) {
   console.log("保護パスの変更はありません。");

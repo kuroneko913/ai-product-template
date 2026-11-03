@@ -26,6 +26,7 @@
 - 製品のリポジトリ(`is_template` が false)の GitHub Actions で、`Check / fast`、`Check / acceptance`、`Security`、`E2E`、`Core / scripts` が成功。`Template self-test` は skipped(設計どおり)。ガードは、ラベルがないと失敗(設計どおり)
 - Codex のレビューで、次の2件(P1)が見つかり、直した(失敗するテストを先に書いた。共通の自己検査は15件から28件に)
   - 保護ファイルを、保護されていない場所へ移動すると、ガードが見逃す(`git diff` の移動の検出で、移動先しか出なかった)。`--no-renames` で直した
+  - 日本語・タブ・引用符を含む保護ファイル名を、ガードが見逃す(`git diff --name-only` は、そうした名前を引用符つきで出力する)。`-z`(NUL 区切り)で直した。共通の自己検査は32件
   - `guard-secrets.sh` が、Bash での `cat ".env"`、`secrets/`、`*.pem`、秘密鍵の読み取りを見逃す。境界の文字に引用符などを加え、パスの範囲を Read / Edit と揃えた。シェルの書き方は無数にあるため、Bash の検査は網羅できない(最終的な守りは、Secrets を AI の環境に置かないこと)
 
 ### 確認できていないこと

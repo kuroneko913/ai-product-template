@@ -87,3 +87,32 @@ test("BASE_SHA がなければ(プルリクエストでなければ)、省略し
   const r = spawnSync(process.execPath, [script], { encoding: "utf8", env: { ...process.env, BASE_SHA: "" } });
   assert.equal(r.status, 0);
 });
+
+test("日本語を含むファイル名の保護ファイルを追加しても、失敗する", () => {
+  const r = run({
+    base: { "README.md": "x" },
+    change: (d) => write(d, "tests/acceptance/日本.test.ts", "1"),
+  });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, /tests\/acceptance\/日本\.test\.ts/);
+});
+
+test("タブや引用符を含むファイル名の保護ファイルを変更しても、失敗する", () => {
+  for (const name of ["tests/acceptance/a\tb.test.ts", 'tests/acceptance/q"uote.test.ts']) {
+    const r = run({ base: { [name]: "1" }, change: (d) => write(d, name, "2") });
+    assert.equal(r.status, 1, JSON.stringify(name) + r.stdout + r.stderr);
+  }
+});
+
+test("日本語を含むファイル名の保護ファイルを削除しても、失敗する", () => {
+  const r = run({
+    base: { "tests/acceptance/日本.test.ts": "1" },
+    change: (d) => git(d, "rm", "-q", "tests/acceptance/日本.test.ts"),
+  });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+});
+
+test("日本語を含むファイル名の、通常のファイルだけの変更は、通る", () => {
+  const r = run({ base: { "docs/日本.md": "1" }, change: (d) => write(d, "docs/日本.md", "2") });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
