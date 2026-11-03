@@ -55,6 +55,16 @@ test("guard-secrets: Bash で認証情報を読むコマンドを拒否する(�
     assert.equal(decide(secretsHook, bash(c)), "deny", c);
 });
 
+test("guard-secrets: グロブ(*、?)で認証情報のファイルを読むコマンドも拒否する", () => {
+  for (const c of ["cat .env.*", "cat .env*", "cat .env.?*", "cat .dev.vars.*", "cat .dev.vars*", "cat secrets/*", "cat *.pem", "cat ./.env.*"])
+    assert.equal(decide(secretsHook, bash(c)), "deny", c);
+});
+
+test("guard-secrets: awk の派生(gawk、mawk、nawk)や、別名のコマンドでも拒否する", () => {
+  for (const c of ["gawk '{print}' .env", "mawk '{print}' .env", "nawk 1 .dev.vars", "bat .env", "xxd .env", "sudo cat .env", "/bin/cat .env"])
+    assert.equal(decide(secretsHook, bash(c)), "deny", c);
+});
+
 test("guard-secrets: 無関係な Bash コマンドは許可する", () => {
   for (const c of [
     "npm test",

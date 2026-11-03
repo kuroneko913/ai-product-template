@@ -15,8 +15,10 @@ FILE_PATTERN='(^|/)\.env(\.[^/]*)?$|(^|/)\.dev\.vars(\.[^/]*)?$|(^|/)secrets/|\.
 # 引用符つき(cat ".env")や、代入・リダイレクトの中でも見つける。
 BEFORE="(^|[[:space:]/\"'=:(<>@])"
 AFTER="([^A-Za-z0-9_.-]|\$)"
-CMD_PATTERN="${BEFORE}(\.env|\.dev\.vars)(\.[A-Za-z0-9_.-]+)?${AFTER}|${BEFORE}secrets/|\.pem${AFTER}|${BEFORE}id_(rsa|ed25519)${AFTER}"
-READERS='(cat|less|more|head|tail|tac|nl|strings|jq|grep|rg|sed|awk|cp|mv|scp|rsync|curl|wget|base64|openssl|gpg|python|python3|node|xxd|od|source|tar|zip|vim|vi|nano|open|ssh|ssh-add)'
+# グロブ(.env.* や .env.?*)は、シェルが展開する前の文字列なので、* と ? も、ファイル名の一部として扱う。
+CMD_PATTERN="${BEFORE}(\.env|\.dev\.vars)(\.[A-Za-z0-9_.*?-]*)?${AFTER}|${BEFORE}secrets/|\.pem${AFTER}|${BEFORE}id_(rsa|ed25519)${AFTER}"
+# 読み取りコマンドの名前は、前後の境界を見ない(gawk、mawk、/bin/cat、sudo cat なども、名前に含まれていれば対象にする)。
+READERS='(cat|less|more|head|tail|tac|nl|strings|jq|grep|rg|sed|awk|cp|mv|scp|rsync|curl|wget|base64|openssl|gpg|python|node|xxd|od|source|tar|zip|vim|vi|nano|open|ssh|bat|view|diff|sort|cut|paste|tee|column|fold|rev)'
 
 deny() {
   jq -n --arg reason "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}'
@@ -35,7 +37,7 @@ case "$TOOL_NAME" in
     command="$(jq -r '.tool_input.command // empty' <<<"$INPUT")"
     stripped="${command//.env.example/}"
     stripped="${stripped//.dev.vars.example/}"
-    if [[ "$stripped" =~ $CMD_PATTERN && "$stripped" =~ (^|[^A-Za-z0-9_-])${READERS}([^A-Za-z0-9_-]|$) ]]; then
+    if [[ "$stripped" =~ $CMD_PATTERN && "$stripped" =~ $READERS ]]; then
       deny "認証情報を直接読み取り・複製・送信するコマンドは実行できません。"
     fi
     ;;
