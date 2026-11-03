@@ -10,7 +10,8 @@ if (!base) {
 }
 if (!/^[0-9a-f]{40}$/.test(base)) throw new Error("BASE_SHA が不正です");
 
-const diff = spawnSync("git", ["diff", "--name-only", `${base}...HEAD`], {
+// --no-renames: 移動は「移動元の削除」と「移動先の追加」の両方として出す(移動元だけ保護パスでも、見逃さない)。
+const diff = spawnSync("git", ["diff", "--name-only", "--no-renames", `${base}...HEAD`], {
   encoding: "utf8",
   maxBuffer: 20 * 1024 * 1024,
 });
