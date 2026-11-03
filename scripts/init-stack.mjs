@@ -1,5 +1,5 @@
 // スタックを選ぶ: node scripts/init-stack.mjs <名前>
-// stacks/<名前>/ の中身を、リポジトリの直下へ展開し、stacks/ とテンプレート自身の検査を消す。
+// stacks/<名前>/ の中身を、リポジトリの直下へ展開し、stacks/ を消す。
 // 展開できるのは1回だけ。既存のファイルは上書きしない(factory.json などの置き換え対象を除く)。
 import {
   copyFileSync,
@@ -15,7 +15,6 @@ import { dirname, join } from "node:path";
 
 const REPLACEABLE = new Set(["factory.json", "security.config.json", "docs/STACK.md"]);
 const MERGEABLE = new Set([".gitignore"]);
-const TEMPLATE_ONLY = [".github/workflows/template-selftest.yml"];
 
 function walk(dir, base = "") {
   const out = [];
@@ -68,7 +67,6 @@ for (const rel of files) {
 }
 
 rmSync("stacks", { recursive: true, force: true });
-for (const file of TEMPLATE_ONLY) rmSync(file, { force: true });
 
 const installed = JSON.parse(readFileSync("factory.json", "utf8"));
 console.log(`スタック「${installed.stack}」を展開しました(${files.length}ファイル)。`);

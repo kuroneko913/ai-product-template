@@ -22,7 +22,7 @@ AIエージェントに、新しいプロダクトの開発を任せるための
 3. [`docs/SETUP.md`](docs/SETUP.md) の人間の作業を行う(GitHub の設定、ラベル、ブランチ保護)。スタック固有の作業は、展開された `docs/STACK.md` にある。
 4. issue を作り、内容を確認して `ready` を付ける。AI が実装して PR を出す。流れは [`docs/WORKFLOW.md`](docs/WORKFLOW.md)。
 
-スタックを選ばないままだと、CI は失敗する(意図した動き)。テンプレート自身(Template repository に設定したリポジトリ)では、この検査は動かさず、代わりに `Template self-test` が、各スタックを展開して通しで検査する。
+スタックを選ばないままだと、CI は失敗する(意図した動き)。テンプレート自身(Template repository に設定したリポジトリ)では、この検査は動かさず、代わりに `ci.yml` の `selftest` ジョブが、各スタックを展開して通しで検査する(`checks` の判定に含まれる)。
 
 ## 構成
 
@@ -42,7 +42,7 @@ AIエージェントに、新しいプロダクトの開発を任せるための
 - `factory.json`: `stack` の名前と、`commands`(`install`、`fast`、`security`、`acceptance`。ブラウザなどがあれば `e2e`)。`installedMarker`(依存が入っていれば存在するパス)があると、依存が未導入のときに Stop hook が素通りする。
 - `security.config.json`: `artifactDirs`(ビルド成果物の場所。なければ `[]`)など。
 - `docs/STACK.md`: そのスタックの注意とセットアップ。
-- `.github/workflows/template-selftest.yml` の matrix に、スタック名を足す(テンプレート自身の検査)。
+- `.github/workflows/ci.yml` の `selftest` ジョブの matrix に、スタック名を足す(テンプレート自身の検査)。
 
 標準の入口の `security` は、必ず、秘密情報の検査(`node scripts/secret-scan.mjs`)と、依存の脆弱性の検査を含める。
 

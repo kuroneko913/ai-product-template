@@ -17,7 +17,7 @@
 
 ### GitHub Actions 上で確認できたこと(2026-11-03)
 
-- `Template self-test`(web-worker を展開して `install`、`fast`、`acceptance`、`security`、`e2e` を実行。e2e は `playwright install --with-deps` を含む)が、`main` への push と、Dependabot の PR(#1)の両方で成功
+- `Template self-test`(`selftest` ジョブ。web-worker を展開して `install`、`fast`、`acceptance`、`security`、`e2e` を実行。e2e は `playwright install --with-deps` を含む)が、`main` への push と、Dependabot の PR(#1)の両方で成功
 - `Core / scripts`(自己検査15件)が成功
 - 保護パスのガード(`Guard / protected paths`)が、`.github/**` を変更する PR(Dependabot の #1)で、期待どおり失敗した
 
