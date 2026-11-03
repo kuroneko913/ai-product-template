@@ -88,8 +88,8 @@ jobs:
 
   protected-paths:
     name: Guard / protected paths
-    # テンプレート自身の保守では、保護パスを変更するのが仕事なので、動かさない。
-    if: ${{ github.event_name == 'pull_request' && !github.event.repository.is_template }}
+    # テンプレート自身でも動かす。保護パスの変更は、保守でも、人間が `protected-change` ラベルで承認する。
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -124,8 +124,7 @@ jobs:
           IS_TEMPLATE: ${{ github.event.repository.is_template }}
         run: |
           test "$CORE" = success
-          # テンプレート自身では、suite と guard は動かさず、代わりに selftest の成功を要求する。
-          if [ "$IS_TEMPLATE" = "true" ]; then test "$SELFTEST" = success; exit 0; fi
-          test "$SUITE" = success
-          # push では protected-paths は実行されない(skipped)。PR では success が必要。
+          # テンプレート自身では、suite の代わりに selftest(各スタックの通し検査)の成功を要求する。
+          if [ "$IS_TEMPLATE" = "true" ]; then test "$SELFTEST" = success; else test "$SUITE" = success; fi
+          # push では protected-paths は実行されない(skipped)。PR では success が必要(テンプレート自身も同じ)。
           if [ "$EVENT" = "pull_request" ]; then test "$GUARD" = success; fi
