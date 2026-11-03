@@ -21,7 +21,6 @@ const base = () => ({
   "factory.json": JSON.stringify({ version: 1, stack: null }),
   "security.config.json": '{"version":1,"artifactDirs":[]}',
   ".gitignore": ".env\n",
-  ".github/workflows/template-selftest.yml": "name: selftest\n",
   "stacks/demo/factory.json": JSON.stringify({ version: 1, stack: "demo", commands: { fast: "true" } }),
   "stacks/demo/security.config.json": '{"version":1,"artifactDirs":["dist"]}',
   "stacks/demo/.gitignore": "dist\n.env\n",
@@ -29,7 +28,7 @@ const base = () => ({
   "stacks/other/factory.json": "{}",
 });
 
-test("スタックを展開し、stacks/ とテンプレート自身の検査を消す", () => {
+test("スタックを展開し、stacks/ を消す", () => {
   const dir = workspace(base());
   const r = run(dir, "demo");
   assert.equal(r.status, 0, r.stderr);
@@ -37,7 +36,6 @@ test("スタックを展開し、stacks/ とテンプレート自身の検査を
   assert.equal(readFileSync(join(dir, "src/app.txt"), "utf8"), "app");
   assert.equal(JSON.parse(readFileSync(join(dir, "security.config.json"), "utf8")).artifactDirs[0], "dist");
   assert.equal(existsSync(join(dir, "stacks")), false);
-  assert.equal(existsSync(join(dir, ".github/workflows/template-selftest.yml")), false);
 });
 
 test(".gitignore は、重複を除いて追記する", () => {

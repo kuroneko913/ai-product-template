@@ -15,9 +15,15 @@
 - hook(秘密、保護パス、Stop)の動作確認、PR を模した保護パスのガードの動作確認
 - 「本人確認を外す」変更を入れると、単体テストが落ちること
 
+### GitHub Actions 上で確認できたこと(2026-11-03)
+
+- `Template self-test`(`selftest` ジョブ。web-worker を展開して `install`、`fast`、`acceptance`、`security`、`e2e` を実行。e2e は `playwright install --with-deps` を含む)が、`main` への push と、Dependabot の PR(#1)の両方で成功
+- `Core / scripts`(自己検査15件)が成功
+- 保護パスのガード(`Guard / protected paths`)が、`.github/**` を変更する PR(Dependabot の #1)で、期待どおり失敗した
+
 ### 確認できていないこと
 
-- GitHub Actions 上での実行(未実行)。`factory-run e2e` が実行する `playwright install --with-deps` は、ローカルでは試していない
+- 製品のリポジトリでの `ci.yml` の `suite`(スタックを展開した状態での実行)。`Template self-test` は、同じコマンドを順に実行するだけで、`ci.yml` 自体のマトリクスは通っていない
 - Cloudflare への実際の配備と Access の通し確認
 - Claude Code の中で、hook・skill・サブエージェントが期待どおり動くか(設定は書いたが、実際のセッションでは試していない)
 - `web-worker` 以外のスタック。共通の土台が、別の言語でも成り立つかは、実際に2つ目を作るまで分からない

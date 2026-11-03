@@ -1,6 +1,8 @@
 name: CI
 on:
   pull_request:
+    # ラベル(protected-change)の付与・解除でも再実行する。ガードは、実行時点のラベルを見る。
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:
@@ -13,6 +15,8 @@ jobs:
   # コマンドの中身は factory.json にある。スタックが未選択なら、ここは失敗する。
   suite:
     name: ${{ matrix.name }}
+    # テンプレート自身には、スタックがない。製品のリポジトリ(is_template が false)でだけ動かす。
+    if: ${{ !github.event.repository.is_template }}
     strategy:
       # 独立した検査は、1つが落ちても他を止めない。
       fail-fast: false
@@ -41,6 +45,35 @@ jobs:
       - run: node scripts/factory-run.mjs install
       - run: node scripts/factory-run.mjs ${{ matrix.step }}
 
+  # テンプレート自身でだけ動く。各スタックを展開して、標準の入口を通しで検査する。
+  # 製品のリポジトリ(is_template が false)では動かない。
+  selftest:
+    name: Template self-test / ${{ matrix.stack }}
+    if: ${{ github.event.repository.is_template }}
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [web-worker]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - name: Select the stack in this copy
+        run: node scripts/init-stack.mjs ${{ matrix.stack }}
+      - run: node scripts/factory-run.mjs install
+      - run: node scripts/factory-run.mjs fast
+      - run: node scripts/factory-run.mjs acceptance
+      - run: node scripts/factory-run.mjs security
+      - run: node scripts/factory-run.mjs e2e
+
   # 共通の仕組み(保護パスの判定、標準の入口、スタックの展開)の自己検査。
   core:
     name: Core / scripts
@@ -57,6 +90,7 @@ jobs:
 
   protected-paths:
     name: Guard / protected paths
+    # テンプレート自身でも動かす。保護パスの変更は、保守でも、人間が `protected-change` ラベルで承認する。
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -78,18 +112,21 @@ jobs:
   # どれかが失敗・キャンセル・スキップされたら失敗にする。
   checks:
     if: always()
-    needs: [suite, core, protected-paths]
+    needs: [suite, selftest, core, protected-paths]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
       - name: Require every job to pass
         env:
           SUITE: ${{ needs.suite.result }}
+          SELFTEST: ${{ needs.selftest.result }}
           CORE: ${{ needs.core.result }}
           GUARD: ${{ needs.protected-paths.result }}
           EVENT: ${{ github.event_name }}
+          IS_TEMPLATE: ${{ github.event.repository.is_template }}
         run: |
-          test "$SUITE" = success
           test "$CORE" = success
-          # push では protected-paths は実行されない(skipped)。PR では success が必要。
+          # テンプレート自身では、suite の代わりに selftest(各スタックの通し検査)の成功を要求する。
+          if [ "$IS_TEMPLATE" = "true" ]; then test "$SELFTEST" = success; else test "$SUITE" = success; fi
+          # push では protected-paths は実行されない(skipped)。PR では success が必要(テンプレート自身も同じ)。
           if [ "$EVENT" = "pull_request" ]; then test "$GUARD" = success; fi
