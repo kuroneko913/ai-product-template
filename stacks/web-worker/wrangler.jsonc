@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // 作成後に、名前と APP_ORIGIN を、人間が承認した値へ置き換える(docs/SETUP.md)。
+  "name": "product-template",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-05-03",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "APP_ORIGIN": "https://REPLACE_WITH_APPROVED_HOST",
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
+  },
+  // 本人のメールアドレスは ACCESS_ALLOWED_EMAIL(Worker Secret)に入れる。値はAIに渡さない。
+  "observability": { "enabled": false }
+}

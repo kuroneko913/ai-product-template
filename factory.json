@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "stack": null,
+  "comment": "標準の入口。スタックを選ぶ(node scripts/init-stack.mjs <名前>)と、スタック側の factory.json に置き換わる。hook・CI・エージェントは、ここに書かれたコマンドだけを呼ぶ。"
+}

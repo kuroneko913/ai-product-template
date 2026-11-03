@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "comment": "実装するエージェントが変更してはいけないパス。hook(.claude/hooks)とCI(guard:protected)が参照する。CODEOWNERSと一緒に更新する。",
+  "patterns": [
+    "tests/acceptance/**",
+    ".github/**",
+    ".claude/**",
+    "scripts/**",
+    "factory.json",
+    "security.config.json",
+    "protected-paths.json",
+    "wrangler.jsonc",
+    "wrangler.*.jsonc",
+    "package-lock.json",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ]
+}

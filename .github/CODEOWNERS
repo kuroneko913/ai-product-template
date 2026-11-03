@@ -1,0 +1,13 @@
+# 保護パスの変更は、人間のレビューを必須にする(ブランチ保護で「コードオーナーのレビューを必須」にする)。
+# protected-paths.json と一緒に更新する。
+/.github/                @kuroneko913
+/.claude/                @kuroneko913
+/scripts/                @kuroneko913
+/tests/acceptance/       @kuroneko913
+/factory.json            @kuroneko913
+/security.config.json    @kuroneko913
+/protected-paths.json    @kuroneko913
+/wrangler.jsonc          @kuroneko913
+/package-lock.json       @kuroneko913
+/AGENTS.md               @kuroneko913
+/CLAUDE.md               @kuroneko913

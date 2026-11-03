@@ -1,0 +1,95 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  # コマンドの中身は factory.json にある。スタックが未選択なら、ここは失敗する。
+  suite:
+    name: ${{ matrix.name }}
+    strategy:
+      # 独立した検査は、1つが落ちても他を止めない。
+      fail-fast: false
+      matrix:
+        include:
+          - name: Check / fast
+            step: fast
+          - name: Check / acceptance
+            step: acceptance
+          - name: Security
+            step: security
+          - name: E2E
+            step: e2e
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - run: node scripts/factory-run.mjs install
+      - run: node scripts/factory-run.mjs ${{ matrix.step }}
+
+  # 共通の仕組み(保護パスの判定、標準の入口、スタックの展開)の自己検査。
+  core:
+    name: Core / scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - run: node --test "scripts/tests/*.test.mjs"
+
+  protected-paths:
+    name: Guard / protected paths
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - name: Fail if the PR changes protected paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PROTECTED_CHANGE_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'protected-change') }}
+        run: node scripts/guard-protected-paths.mjs
+
+  # ブランチ保護の必須チェックには、この1本だけを指定する。
+  # どれかが失敗・キャンセル・スキップされたら失敗にする。
+  checks:
+    if: always()
+    needs: [suite, core, protected-paths]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require every job to pass
+        env:
+          SUITE: ${{ needs.suite.result }}
+          CORE: ${{ needs.core.result }}
+          GUARD: ${{ needs.protected-paths.result }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          test "$SUITE" = success
+          test "$CORE" = success
+          # push では protected-paths は実行されない(skipped)。PR では success が必要。
+          if [ "$EVENT" = "pull_request" ]; then test "$GUARD" = success; fi

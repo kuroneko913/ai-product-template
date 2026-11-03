@@ -1,0 +1,50 @@
+name: タスク(実装する仕事)
+description: 実装を頼む issue。人間が確認して `ready` を付けるまで、AIは着手しません。
+labels: ["proposed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `ready` を付けるのは人間だけです。付けたあと、受け入れ条件は変更できません(変えたいときは、新しい issue にします)。
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: 何のために、誰のために。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 受け入れ条件
+      description: テストかチェックで、機械的に判定できる形で書く。「良さそう」「エラーが出ない」は条件にならない。
+      placeholder: "- 〜のとき、〜が表示される(テスト: tests/acceptance/...)"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 触ってよい範囲
+      description: ディレクトリやファイル。認証・課金・DBの移行・Secrets・保護パスは対象外。
+    validations:
+      required: true
+  - type: textarea
+    id: out
+    attributes:
+      label: やらないこと
+  - type: dropdown
+    id: tier
+    attributes:
+      label: 優先度(tier)
+      options:
+        - "tier:1 いま困っていることを直す"
+        - "tier:2 できることが増える"
+        - "tier:3 使い心地の改善"
+        - "tier:4 リファクタリング"
+    validations:
+      required: true
+  - type: textarea
+    id: depends
+    attributes:
+      label: 依存する issue
+      description: この仕事が、他の issue の結果を使うなら、番号を書く。なければ「なし」。

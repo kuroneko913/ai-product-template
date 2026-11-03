@@ -1,0 +1,48 @@
+{
+  "name": "product-template",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:acceptance": "vitest run tests/acceptance",
+    "test:e2e": "playwright test",
+    "check:fast": "npm run typecheck && npm run security:static && npm test",
+    "guard:protected": "node scripts/guard-protected-paths.mjs",
+    "worker:check": "wrangler deploy --dry-run --outdir .local-tools/worker-build",
+    "security:tools": "node scripts/install-gitleaks.mjs",
+    "security:static": "eslint src worker scripts tests",
+    "security:secrets": "node scripts/secret-scan.mjs",
+    "security:scanner-selftest": "node scripts/secret-scan-selftest.mjs",
+    "security:check": "node scripts/security-check.mjs"
+  },
+  "dependencies": {
+    "jose": "^6.2.12",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261004.1",
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^22.18.6",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "10.12.0",
+    "eslint-plugin-security": "4.2.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "8.71.0",
+    "vite": "^6.3.6",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.147.0"
+  },
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "stack": "web-worker",
+  "installedMarker": "node_modules",
+  "commands": {
+    "install": "npm ci --ignore-scripts",
+    "fast": "npm run check:fast",
+    "security": "npm run security:tools && npm run security:check",
+    "acceptance": "npm run test:acceptance",
+    "e2e": "npx playwright install --with-deps chromium && npm run test:e2e"
+  }
+}

@@ -1,0 +1,2 @@
+# ローカルでWorkerを動かすときの値の形。実際の値は .dev.vars(Git管理外)に、人間が入れる。
+ACCESS_ALLOWED_EMAIL=

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "configured": true,
+  "artifactDirs": ["dist"],
+  "appChecks": [
+    {
+      "label": "Acceptance tests",
+      "script": "test:acceptance"
+    },
+    {
+      "label": "Worker build dry-run",
+      "script": "worker:check"
+    }
+  ]
+}

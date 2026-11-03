@@ -1,0 +1,20 @@
+name: フィードバック(使ってみて気づいたこと)
+description: 使いながら出た改善点。AIが受け取り、タスクに分けます。
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: tried
+    attributes:
+      label: 何をしようとしましたか
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: 何が起きましたか
+    validations:
+      required: true
+  - type: textarea
+    id: want
+    attributes:
+      label: どうなってほしいですか
